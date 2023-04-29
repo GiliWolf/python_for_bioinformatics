@@ -45,8 +45,8 @@ def find_ssr(a):
     if (len(dict)==0):
         return None
     else:
-        print(dict)
-# find_ssr(sys.argv[1])
+        return dict
+
 
 
 # this function gets an str represents dna seq and returns in mRNA trancrived seq
@@ -68,4 +68,3 @@ def transcribe(a):
             transcribed_str += 'C'
     return transcribed_str
 
-print(transcribe("cgrtUyDaac"))
