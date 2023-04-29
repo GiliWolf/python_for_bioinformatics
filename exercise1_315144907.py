@@ -1,16 +1,23 @@
 # Gili Wolf 315144907
 import sys
 
+# this function itreate on a given string and tries to find sub sequences which repeats more than 3 times (included)
+# if it finds a suitable sub suquence, it is added to a dictorney as the sub sequences is the key, 
+# and the amount of repits are the value
+# temp_substr - the "window" of where it search the repeated sequence
+# micro_set - the hypothetical sub seq
+# algorithem: i - position of the first charcter of both the temp_substr and micro_set
+#             m - the length of the current micro_set
+#             j - amount of possible temp_substr which starts with a[i]
+#             itreating over the 3 above indexes in order to check every possible sub seqs,
+#             if after 1 iteration the temp_count (number of repeats) doesn't increase,
+#             the algorithem continues to next possible sub seq.
 def find_ssr(a):
     if (len(a) == 0):
         print("empty string")
         return
-    # micro_set= str(a[0])
-    # temp_substr = str(a[0])
     global count
     count = 0
-    # i  = 0
-    # j = 1
     dict ={}
     flag = False
     for i in range(len(a)):
@@ -20,8 +27,6 @@ def find_ssr(a):
                 break
             for j in range(i+1, len(a) + 1):
                 flag = False
-                # if (m * (count + 1) > len(a)):
-                #         break
                 temp_substr = a[i:i + (m * (count + 1)):]
                 micro_set = a[i:i+m:]
                 temp_count = temp_substr.count(micro_set)
@@ -37,7 +42,8 @@ def find_ssr(a):
                         continue
                 dict[micro_set] = temp_count
                 count = 0
-        count = 0
-    count = 0
-    print(dict)
-find_ssr("ATCAAATCAAATCAAGAGAGAGGGGG")
+    if (len(dict)==0):
+        return None
+    else:
+        print(dict)
+find_ssr(sys.argv[1])
