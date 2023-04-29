@@ -46,4 +46,26 @@ def find_ssr(a):
         return None
     else:
         print(dict)
-find_ssr(sys.argv[1])
+# find_ssr(sys.argv[1])
+
+
+# this function gets an str represents dna seq and returns in mRNA trancrived seq
+# algorithem : 1. reverse the str
+#              2. upper case all the str
+#              3. transcribe
+def transcribe(a):
+    reverse_str = a[::-1]
+    upper_str = reverse_str.upper()
+    transcribed_str = ""
+    for i in upper_str:
+        if i == "A":
+            transcribed_str += 'U'
+        elif i == "T":
+            transcribed_str += 'A'
+        elif i == "C":
+            transcribed_str += 'G'
+        elif i == "G":
+            transcribed_str += 'C'
+    return transcribed_str
+
+print(transcribe("cgrtUyDaac"))
