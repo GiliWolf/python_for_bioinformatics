@@ -68,3 +68,87 @@ def transcribe(a):
             transcribed_str += 'C'
     return transcribed_str
 
+aa_table = {"UUU":"F", "UUC":"F", "UUA":"L", "UUG":"L",
+       "UCU":"S", "UCC":"s", "UCA":"S", "UCG":"S",
+       "UAU":"Y", "UAC":"Y", "UAA":"STOP", "UAG":"STOP",
+       "UGU":"C", "UGC":"C", "UGA":"STOP", "UGG":"W",
+       "CUU":"L", "CUC":"L", "CUA":"L", "CUG":"L",
+       "CCU":"P", "CCC":"P", "CCA":"P", "CCG":"P",
+       "CAU":"H", "CAC":"H", "CAA":"Q", "CAG":"Q",
+       "CGU":"R", "CGC":"R", "CGA":"R", "CGG":"R",
+       "AUU":"I", "AUC":"I", "AUA":"I", "AUG":"M",
+       "ACU":"T", "ACC":"T", "ACA":"T", "ACG":"T",
+       "AAU":"N", "AAC":"N", "AAA":"K", "AAG":"K",
+       "AGU":"S", "AGC":"S", "AGA":"R", "AGG":"R",
+       "GUU":"V", "GUC":"V", "GUA":"V", "GUG":"V",
+       "GCU":"A", "GCC":"A", "GCA":"A", "GCG":"A",
+       "GAU":"D", "GAC":"D", "GAA":"E", "GAG":"E",
+       "GGU":"G", "GGC":"G", "GGA":"G", "GGG":"G"}
+
+# this function finds the first AUG codon (met) in the givan a seq, and returns its index
+# return None if there is not such codon
+def start_met(a, reading_frame):
+    j = 0
+    for i in range(reading_frame, len(a), 3):
+        if i > len(a) - 3:
+            return None
+        codon = a[i: i +3]
+        if (aa_table[codon] == "M"):
+                return i
+    return None
+
+# this function translate the given a seq from its 1st met until 'stop codon' or the end of the seq
+# returns a tuple of (protein (list of aa), length of protein (aa wise), the index of the first nt after the stop codon)
+def mRNAtoAA(a, first_met):
+    protein =[]
+    j = 0
+    for i in range(first_met, len(a), 3):
+        if i  > (len(a) - 3):
+                return (protein, j, None)
+        codon = a[i: i+3]
+        if (aa_table[codon] == "STOP"):
+                return (protein, j, i + 3)
+        protein += aa_table[codon]
+        j += 1
+
+# this function translates a given mRNA seq into aa list 
+# algorithem : * search for first met 
+#              * add protein to map according to its translation
+#              * search for more reading frames and add other translated proteins
+#              * return the longest (aa wise) protein in the mRNA
+# retirn none if the mRNA is a non-coding seq
+def translate(a, reading_frame):
+    protein_map ={}
+    first_met = start_met(a, reading_frame)
+    if first_met is not None:
+        protein = mRNAtoAA(a, first_met)
+        protein_map[protein[1]] = protein[0]
+        i = 0
+    else:
+        return None
+    while ( type(protein[2]) != None or type(first_met) != None):
+        first_met = start_met(a[protein[2]: len(a)], 0)
+        if first_met is not None:
+            protein = mRNAtoAA(a[protein[2] + first_met: len(a)], first_met)
+            protein_map[protein[1]] = protein[0]
+        else:
+            break
+        
+    return(protein_map[max(protein_map.keys())])
+
+
+def main(ssr_dna_seq, dna_to_rna, rna_to_aa, reading_frame):
+    if ssr_dna_seq is not None:
+        ssr_dict = find_ssr(ssr_dna_seq)
+        ssr_list = sorted(ssr_dict.keys())
+        start = True
+        for key in ssr_list:
+            if (start):
+                start = False
+            else:
+                print(";", end = "")
+            print(key, ",", ssr_dict[key], end = "")
+
+
+if __name__ == "__main__":
+    main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
