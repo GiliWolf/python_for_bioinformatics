@@ -140,15 +140,38 @@ def translate(a, reading_frame):
 def main(ssr_dna_seq, dna_to_rna, rna_to_aa, reading_frame):
     if ssr_dna_seq is not None:
         ssr_dict = find_ssr(ssr_dna_seq)
-        ssr_list = sorted(ssr_dict.keys())
+        if (ssr_dict is not None):
+            ssr_list = sorted(ssr_dict.keys())
+            start = True
+            for key in ssr_list:
+                if (start):
+                    start = False
+                else:
+                    print(";", sep = "",end = "")
+                print(key, ",", ssr_dict[key], sep = "", end = "")
+            print()
+        else:
+            print("No simple repeats in DNA sequence")
+    else: 
+        print("ssr_dna_seq is None")
+    
+    if (dna_to_rna is not None):
+        print("RNA sequence:", transcribe(dna_to_rna))
+    else:
+        print("DNA to be transcribed is None")
+    
+    if (rna_to_aa is not None):
+        protein = translate(rna_to_aa, int(reading_frame))
+        print("Translation: " , end="")
         start = True
-        for key in ssr_list:
+        for aa in protein:
             if (start):
-                start = False
+                    start = False
             else:
-                print(";", end = "")
-            print(key, ",", ssr_dict[key], end = "")
-
-
+                print(";", sep = "",end = "")
+            print(aa, end= "")
+        print()
+    else:
+        print("RNA to be translate is None")
 if __name__ == "__main__":
     main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
