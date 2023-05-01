@@ -68,6 +68,7 @@ def transcribe(a):
             transcribed_str += 'C'
     return transcribed_str
 
+# table of mRNA codon as keys, and their matching AA as values
 aa_table = {"UUU":"F", "UUC":"F", "UUA":"L", "UUG":"L",
        "UCU":"S", "UCC":"s", "UCA":"S", "UCG":"S",
        "UAU":"Y", "UAC":"Y", "UAA":"STOP", "UAG":"STOP",
@@ -136,7 +137,9 @@ def translate(a, reading_frame):
         
     return(protein_map[max(protein_map.keys())])
 
-
+# main function takes dna seq and prints its SSRs (using the find ssr function) in a laxicographic order 
+# transcribe DNA seq into RNA using the transcribe method and prints the result
+# transalte mRNA seq into protein (list of AA) using the translate function and prints the result
 def main(ssr_dna_seq, dna_to_rna, rna_to_aa, reading_frame):
     if ssr_dna_seq is not None:
         ssr_dict = find_ssr(ssr_dna_seq)
@@ -173,5 +176,7 @@ def main(ssr_dna_seq, dna_to_rna, rna_to_aa, reading_frame):
         print()
     else:
         print("RNA to be translate is None")
+
+
 if __name__ == "__main__":
     main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
