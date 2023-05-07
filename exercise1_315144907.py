@@ -165,15 +165,18 @@ def main(ssr_dna_seq, dna_to_rna, rna_to_aa, reading_frame):
     
     if (rna_to_aa is not None):
         protein = translate(rna_to_aa, int(reading_frame))
-        print("Translation: " , end="")
-        start = True
-        for aa in protein:
-            if (start):
-                    start = False
-            else:
-                print(";", sep = "",end = "")
-            print(aa, end= "")
-        print()
+        if (protein is not None):
+            print("Translation: " , end="")
+            start = True
+            for aa in protein:
+                if (start):
+                        start = False
+                else:
+                    print(";", sep = "",end = "")
+                print(aa, end= "")
+            print()
+        else: 
+            print("Non-Coding RNA")
     else:
         print("RNA to be translate is None")
 
