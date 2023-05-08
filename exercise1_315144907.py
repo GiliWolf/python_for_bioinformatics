@@ -176,7 +176,7 @@ def main(ssr_dna_seq, dna_to_rna, rna_to_aa, reading_frame):
                 print(aa, end= "")
             print()
         else: 
-            print("Non-Coding RNA")
+            print("Non-coding RNA")
     else:
         print("RNA to be translate is None")
 
