@@ -245,7 +245,10 @@ class StemCell(Cell):
         def recieve(self, signal):
             if float(signal) >= float(self.threshold):
                 # NEED TO CHANGE TO PRINT INTO FILE!!!
-                print(str(signal), ", I like to move it")
+                signal_str = str(signal)
+                signal_str += ", I like to move it\n"
+                self.file.write(signal_str)
+                self.file.close()
     
 class NerveNetwork:
     def __init__(self, muscle_cell, nerve_cells):
@@ -264,6 +267,11 @@ class NerveNetwork:
            print(cell, " sent ", signal)
         self.muscle_cell.recieve(signal)
 
+def main(file_path, signals):
+    pass
+
+if __name__ == "__main__":
+    main(sys.argv[1], sys.argv[2])
         
 cell = StemCell("gili", [("ATCAAATCAAATCAAGAGAGAGGGGG",1), ("ATGATGATGCAT",1)])
 list = cell * 5
