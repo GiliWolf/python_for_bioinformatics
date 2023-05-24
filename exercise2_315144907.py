@@ -190,8 +190,7 @@ class StemCell(Cell):
     def genome_deep_copy(self):
         temp_list = []
         for gene in self.genome:
-            temp_gene = (gene[0], gene[1])
-            temp_list+= temp_gene
+            temp_list.append((gene[0], gene[1]))
         return temp_list
 
     # using the mul override to return a list of self + new deep copy stemcell
@@ -207,11 +206,10 @@ class StemCell(Cell):
         else:
             print("stem cell doesn't support in ", cell_name, " cell differentiate")
         
-    
     def  nerve_cell_builder(self, parameters):
         # new_genome = self.genome_deep_copy()
         new_name = "Nerve Cell"
-        # return NerveCell(self, parameters)
+        return self.NerveCell(self, new_name, parameters)
 
     def  muscle_cell_builder(self, parameters):
         # new_genome = self.genome_deep_copy()
@@ -220,6 +218,22 @@ class StemCell(Cell):
         file_path = list_of_parameters[0]
         threshhold= list_of_parameters[1]
         #return MuscleCell(self, filepath, threshhold)
+
+    class NerveCell(Cell):
+        def __init__(self,stem_cell,name, coefficient):
+            if not isinstance(stem_cell, StemCell):
+                raise TypeError("Expected an instance of StemCell.")   
+            self.coeiicient = coefficient
+            super().__init__(name, stem_cell.genome_deep_copy())
+
+        def receive(self, signal):
+            self.signal = signal
+        
+        def send(self):
+            return self.signal * self.coeiicient
+
+
+
         
 cell = StemCell("gili", [("ATCAAATCAAATCAAGAGAGAGGGGG",1), ("ATGATGATGCAT",1)])
 
@@ -230,5 +244,5 @@ cell = StemCell("gili", [("ATCAAATCAAATCAAGAGAGAGGGGG",1), ("ATGATGATGCAT",1)])
 # print(cell.transcribe(1))
 # print(cell.translate(1))
 # print(cell.repertoire())
-print(cell.mitosis())
+print(cell.differentiate("NerveCell", 2))
 print(cell)
