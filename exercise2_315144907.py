@@ -237,19 +237,36 @@ class StemCell(Cell):
             if not isinstance(stem_cell, StemCell):
                 raise TypeError("Expected an instance of StemCell.") 
             # CHECK PATH!!!
-            self.path = path
+            assert open(path, 'w'), "Muscle cell can't open file"
+            self.file = open(path, 'w')
             self.threshold = threshold
             super().__init__(name, stem_cell.genome_deep_copy())
 
         def recieve(self, signal):
-            if signal >= self.threshold:
+            if float(signal) >= float(self.threshold):
                 # NEED TO CHANGE TO PRINT INTO FILE!!!
                 print(str(signal), ", I like to move it")
-
+    
+class NerveNetwork:
+    def __init__(self, muscle_cell, nerve_cells):
+        if not any(isinstance(cell, StemCell.NerveCell) for cell in nerve_cells):
+            raise TypeError("nerve network contains object which is not nerve cell")
+        if not isinstance(muscle_cell, StemCell.MuscleCell): 
+               print("nerve network recieved none muscle cell")
+        self.muscle_cell = muscle_cell
+        self.nerve_cells = nerve_cells
+    
+    def send_signal(self, signal):
+        for cell in self.nerve_cells:
+           print(cell, " recieved ", signal)
+           cell.receive(signal)
+           signal = cell.send()
+           print(cell, " sent ", signal)
+        self.muscle_cell.recieve(signal)
 
         
 cell = StemCell("gili", [("ATCAAATCAAATCAAGAGAGAGGGGG",1), ("ATGATGATGCAT",1)])
-
+list = cell * 5
 # print(cell.find_ssr(0))
 # print(cell.transcribe(0))
 # print(cell.translate(0))
@@ -257,5 +274,11 @@ cell = StemCell("gili", [("ATCAAATCAAATCAAGAGAGAGGGGG",1), ("ATGATGATGCAT",1)])
 # print(cell.transcribe(1))
 # print(cell.translate(1))
 # print(cell.repertoire()
-print(cell.differentiate("MuscleCell", "txt.txt, 3"))
+muscle_cell = cell.differentiate("MuscleCell", "txt.txt, 3")
+# nerve_cell = cell.differentiate("NerveCell",1.5)
+new_list = []
+for nc in list:
+    new_list.append(nc.differentiate("NerveCell",1.5))
+network  = NerveNetwork(muscle_cell, new_list)
+network.send_signal(1)
 print(cell)
