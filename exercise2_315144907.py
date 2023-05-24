@@ -217,7 +217,7 @@ class StemCell(Cell):
         list_of_parameters = parameters.split(", ")
         file_path = list_of_parameters[0]
         threshhold= list_of_parameters[1]
-        #return MuscleCell(self, filepath, threshhold)
+        return self.MuscleCell(self, new_name, file_path, threshhold)
 
     class NerveCell(Cell):
         def __init__(self,stem_cell,name, coefficient):
@@ -232,6 +232,19 @@ class StemCell(Cell):
         def send(self):
             return self.signal * self.coeiicient
 
+    class MuscleCell(Cell):
+        def __init__(self, stem_cell, name, path, threshold):
+            if not isinstance(stem_cell, StemCell):
+                raise TypeError("Expected an instance of StemCell.") 
+            # CHECK PATH!!!
+            self.path = path
+            self.threshold = threshold
+            super().__init__(name, stem_cell.genome_deep_copy())
+
+        def recieve(self, signal):
+            if signal >= self.threshold:
+                # NEED TO CHANGE TO PRINT INTO FILE!!!
+                print(str(signal), ", I like to move it")
 
 
         
@@ -243,6 +256,6 @@ cell = StemCell("gili", [("ATCAAATCAAATCAAGAGAGAGGGGG",1), ("ATGATGATGCAT",1)])
 # print(cell.find_ssr(1))
 # print(cell.transcribe(1))
 # print(cell.translate(1))
-# print(cell.repertoire())
-print(cell.differentiate("NerveCell", 2))
+# print(cell.repertoire()
+print(cell.differentiate("MuscleCell", "txt.txt, 3"))
 print(cell)
