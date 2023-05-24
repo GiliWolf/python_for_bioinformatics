@@ -173,6 +173,7 @@ class StemCell(Cell):
     def __init__(self, name, genome):
         super().__init__(name, genome)
     
+    # operator override- returns a list - 1. self  2 - num. new deep copy stem cells
     def __mul__(self, num):
         if (num < 1):
             print("error- can only multiply positive numbers")
@@ -181,24 +182,44 @@ class StemCell(Cell):
         cells_list = [self]
         for i in range(num - 1):
             temp_name = self.name
-            temp_list = []
-            for gene in self.genome:
-                temp_gene = (gene[0], gene[1])
-                temp_list+= temp_gene
-            cells_list.append(Cell(temp_name, temp_list))
+            temp_list = self.genome_deep_copy()
+            cells_list.append(StemCell(temp_name, temp_list))
         return cells_list
     
+    # this function return a deep copy list of the self genome 
+    def genome_deep_copy(self):
+        temp_list = []
+        for gene in self.genome:
+            temp_gene = (gene[0], gene[1])
+            temp_list+= temp_gene
+        return temp_list
+
+    # using the mul override to return a list of self + new deep copy stemcell
     def mitosis(self):
         return self * 2
     
+    # according to the cell name- returns a new diffentiated cell using builder functions
     def differentiate(self, cell_name, parameters):
-        pass
+        if cell_name == "NerveCell":
+            return self.nerve_cell_builder(parameters)
+        elif cell_name == "MuscleCell":
+            return self.muscle_cell_builder(parameters)
+        else:
+            print("stem cell doesn't support in ", cell_name, " cell differentiate")
+        
     
     def  nerve_cell_builder(self, parameters):
-        pass
+        # new_genome = self.genome_deep_copy()
+        new_name = "Nerve Cell"
+        # return NerveCell(self, parameters)
 
     def  muscle_cell_builder(self, parameters):
-        pass
+        # new_genome = self.genome_deep_copy()
+        new_name = "Muscle Cell"
+        list_of_parameters = parameters.split(", ")
+        file_path = list_of_parameters[0]
+        threshhold= list_of_parameters[1]
+        #return MuscleCell(self, filepath, threshhold)
         
 cell = StemCell("gili", [("ATCAAATCAAATCAAGAGAGAGGGGG",1), ("ATGATGATGCAT",1)])
 
@@ -209,5 +230,5 @@ cell = StemCell("gili", [("ATCAAATCAAATCAAGAGAGAGGGGG",1), ("ATGATGATGCAT",1)])
 # print(cell.transcribe(1))
 # print(cell.translate(1))
 # print(cell.repertoire())
-print(cell * 3)
+print(cell.mitosis())
 print(cell)
