@@ -38,7 +38,7 @@ class Cell(object):
             return
         global count
         count = 0
-        dict ={}
+        dict_ssr ={}
         flag = False
         for i in range(len(a)):
             for m in range (1,len(a)):
@@ -56,16 +56,16 @@ class Cell(object):
                         count = 0
                         break
                 if (temp_count >= 3):
-                    if (micro_set in dict.keys()):
-                        if (dict[micro_set] >= temp_count):
+                    if (micro_set in dict_ssr.keys()):
+                        if (dict_ssr[micro_set] >= temp_count):
                             count = 0
                             continue
-                    dict[micro_set] = temp_count
+                    dict_ssr[micro_set] = temp_count
                     count = 0
-        if (len(dict)==0):
+        if (len(dict_ssr)==0):
             return None
         else:
-            return dict
+            return dict_ssr
 
 
 
@@ -112,7 +112,7 @@ class Cell(object):
     # return None if there is not such codon
     def start_met(self, a, reading_frame):
         j = 0
-        for i in range(reading_frame, len(a), 3):
+        for i in range(int(reading_frame), len(a), 3):
             if i > len(a) - 3:
                 return None
             codon = a[i: i +3]
@@ -133,6 +133,7 @@ class Cell(object):
                     return (protein, j, i + 3)
             protein += self.aa_table[codon]
             j += 1
+        return (protein, j, i)
 
     # this function translates a given mRNA seq into aa list 
     # algorithem : * search for first met 
@@ -170,8 +171,8 @@ class Cell(object):
         return genome_repertoire
     
 class StemCell(Cell):
-    def __init__(self, name, genome):
-        super().__init__(name, genome)
+    def __init__(self, genome):
+        super().__init__("Stem Cell", genome)
     
     # operator override- returns a list - 1. self  2 - num. new deep copy stem cells
     def __mul__(self, num):
@@ -183,7 +184,7 @@ class StemCell(Cell):
         for i in range(num - 1):
             temp_name = self.name
             temp_list = self.genome_deep_copy()
-            cells_list.append(StemCell(temp_name, temp_list))
+            cells_list.append(StemCell(temp_list))
         return cells_list
     
     # this function return a deep copy list of the self genome 
@@ -199,22 +200,20 @@ class StemCell(Cell):
     
     # according to the cell name- returns a new diffentiated cell using builder functions
     def differentiate(self, cell_name, parameters):
-        if cell_name == "NerveCell":
+        if cell_name == "Nerve Cell":
             return self.nerve_cell_builder(parameters)
-        elif cell_name == "MuscleCell":
+        elif cell_name == "Muscle Cell":
             return self.muscle_cell_builder(parameters)
         else:
             print("stem cell doesn't support in ", cell_name, " cell differentiate")
         
     def  nerve_cell_builder(self, parameters):
-        # new_genome = self.genome_deep_copy()
         new_name = "Nerve Cell"
         return self.NerveCell(self, new_name, parameters)
 
     def  muscle_cell_builder(self, parameters):
-        # new_genome = self.genome_deep_copy()
         new_name = "Muscle Cell"
-        list_of_parameters = parameters.split(", ")
+        list_of_parameters = parameters.split(",")
         file_path = list_of_parameters[0]
         threshhold= list_of_parameters[1]
         return self.MuscleCell(self, new_name, file_path, threshhold)
@@ -230,7 +229,7 @@ class StemCell(Cell):
             self.signal = signal
         
         def send(self):
-            return self.signal * self.coeiicient
+            return float(self.signal) * float(self.coeiicient)
 
     class MuscleCell(Cell):
         def __init__(self, stem_cell, name, path, threshold):
@@ -248,7 +247,7 @@ class StemCell(Cell):
                 signal_str = str(signal)
                 signal_str += ", I like to move it\n"
                 self.file.write(signal_str)
-                self.file.close()
+                
     
 class NerveNetwork:
     def __init__(self, muscle_cell, nerve_cells):
@@ -261,32 +260,135 @@ class NerveNetwork:
     
     def send_signal(self, signal):
         for cell in self.nerve_cells:
-           print(cell, " recieved ", signal)
            cell.receive(signal)
            signal = cell.send()
-           print(cell, " sent ", signal)
         self.muscle_cell.recieve(signal)
+    
+    def __str__(self):
+        self_str = ""
+        for cell in self.nerve_cells:
+            self_str += str(cell)
+            self_str += "\n"
+        self_str +=(str(self.muscle_cell))
+        return self_str
 
+# checks if cell type is legal , if not raises type error, else returns the type
+def cell_type(type):
+    str_type = str(type)
+    if str_type != 'MC' and str_type != 'NC':
+        raise TypeError("File illegal")
+    else:
+        return type
+# check if dna chars are legal, if so return a list of the seperated dna fragments
+def dna_prep(dna):
+    upper_str = dna.upper()
+    DNA_chars = {'A', 'T', 'C', 'G', ','}
+    for char in upper_str:
+        if char not in DNA_chars:
+            raise TypeError("File illegal")
+    return upper_str.split(',')
+
+# check if reading frames chars are legal, if so return a list of the seperated reading frame
+def r_freams_check(rf):
+    rf_chars = {'1', '2', '0', ','}
+    for char in rf:
+        if char not in rf_chars:
+            raise TypeError("File illegal")
+    str_rf = str(rf)
+    return str_rf.split(',')
+
+# gets 2 list - 1. dna seqs 2. reading frames 
+# creats and returns a list of synchronized tuples of dna seq and its reading frame
+def create_genome(DNA_seqs, r_freams):
+    dna_list = dna_prep(DNA_seqs)
+    rf_list = r_freams_check(r_freams)
+    if len(dna_list) != len(rf_list):
+        raise TypeError("File illegal")
+    genome = []
+    for i, dna in enumerate(dna_list):
+        genome.append((dna, rf_list[i]))
+    return genome
+
+# creats new stem cell, and returns a differentiated muscle cell
+def MC_factory(genome, parameters):
+    stem_cell = StemCell(genome)
+    mc = stem_cell.differentiate("Muscle Cell", parameters)
+    return mc
+
+# creats new stem cell, mitosis the cell into 2 stem cells, and returns a list of the 2 differentiated nerve cell
+def NC_factory(genome, parameter):
+    stem_cell = StemCell(genome)
+    stem_cells = stem_cell.mitosis()
+    nc_list = []
+    for cell in stem_cells:
+        nc = cell.differentiate("Nerve Cell", parameter)
+        nc_list.append(nc)
+    return nc_list
+
+# gets a gemone's repertoire and prints it according to the exercise's instructions
+def print_repretoire(rep):
+        
+    for r in rep:
+            ssr_dict = r[0]
+            if (ssr_dict is not None):
+                ssr_list = sorted(ssr_dict.keys())
+                start = True
+                for key in ssr_list:
+                    if (start):
+                        start = False
+                    else:
+                        print(";", sep = "",end = "")
+                    print(key, ",", ssr_dict[key], sep = "", end = "")
+                print()
+            else:
+                print("No simple repeats in DNA sequence")
+        
+            protein = r[1]
+            if (protein is not None):
+                print("Translation: " , end="")
+                start = True
+                for aa in protein:
+                    if (start):
+                            start = False
+                    else:
+                        print(";", sep = "",end = "")
+                    print(aa, end= "")
+                print()
+            else: 
+                print("Non-coding RNA")
+        
 def main(file_path, signals):
-    pass
+    with open(file_path) as file:
+        flag_first = True
+        NC_list = []
+        MC = None
+        for line in file:
+            if (flag_first):
+                flag_first = False
+                continue
+            seperated_line = line.split('\t')
+            c_type = cell_type(seperated_line[0])
+            genome = create_genome(seperated_line[1], seperated_line[2])
+            clean_parameters = str(seperated_line[3]).rstrip("\n")
+            if c_type == 'NC':
+                nc = NC_factory(genome, clean_parameters)
+                NC_list += nc
+            else:
+                MC = MC_factory(genome, clean_parameters)
+        if MC is not None and len(NC_list) > 0:
+            network = NerveNetwork(MC, NC_list)
+            print(network)
+            seperated_signals = signals.split(',')
+            for s in seperated_signals:
+                network.send_signal(s)
+            rep = MC.repertoire()
+            print_repretoire(rep)
+
+        else: 
+            print("File illegal")
+
+
+main("input.txt","50,200,300")
 
 if __name__ == "__main__":
     main(sys.argv[1], sys.argv[2])
-        
-cell = StemCell("gili", [("ATCAAATCAAATCAAGAGAGAGGGGG",1), ("ATGATGATGCAT",1)])
-list = cell * 5
-# print(cell.find_ssr(0))
-# print(cell.transcribe(0))
-# print(cell.translate(0))
-# print(cell.find_ssr(1))
-# print(cell.transcribe(1))
-# print(cell.translate(1))
-# print(cell.repertoire()
-muscle_cell = cell.differentiate("MuscleCell", "txt.txt, 3")
-# nerve_cell = cell.differentiate("NerveCell",1.5)
-new_list = []
-for nc in list:
-    new_list.append(nc.differentiate("NerveCell",1.5))
-network  = NerveNetwork(muscle_cell, new_list)
-network.send_signal(1)
-print(cell)
