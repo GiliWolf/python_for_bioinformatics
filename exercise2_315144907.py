@@ -257,7 +257,7 @@ class NerveNetwork:
                print("nerve network recieved none muscle cell")
         self.muscle_cell = muscle_cell
         self.nerve_cells = nerve_cells
-    
+    # sends a given signal through all of the nerve cells and at last to the muscle cell
     def send_signal(self, signal):
         for cell in self.nerve_cells:
            cell.receive(signal)
@@ -271,6 +271,8 @@ class NerveNetwork:
             self_str += "\n"
         self_str +=(str(self.muscle_cell))
         return self_str
+    
+#******helper methods to main method****
 
 # checks if cell type is legal , if not raises type error, else returns the type
 def cell_type(type):
@@ -326,8 +328,7 @@ def NC_factory(genome, parameter):
     return nc_list
 
 # gets a gemone's repertoire and prints it according to the exercise's instructions
-def print_repretoire(rep):
-        
+def print_repretoire(rep):     
     for r in rep:
             ssr_dict = r[0]
             if (ssr_dict is not None):
@@ -356,25 +357,32 @@ def print_repretoire(rep):
                 print()
             else: 
                 print("Non-coding RNA")
-        
+
 def main(file_path, signals):
     with open(file_path) as file:
         flag_first = True
         NC_list = []
         MC = None
+        #seperate each line
         for line in file:
+            #first line is headlines, skip it
             if (flag_first):
                 flag_first = False
                 continue
+            # seperate line and get cell type, genome and parameters acoordinly
             seperated_line = line.split('\t')
             c_type = cell_type(seperated_line[0])
             genome = create_genome(seperated_line[1], seperated_line[2])
             clean_parameters = str(seperated_line[3]).rstrip("\n")
+            #using NC / MC fatory to get the suitble cell according to cell type and ex's instructions
             if c_type == 'NC':
                 nc = NC_factory(genome, clean_parameters)
                 NC_list += nc
             else:
                 MC = MC_factory(genome, clean_parameters)
+        # check if got at least one muscle cell and at least one nerve cell
+        # if so builds a cell network and pass each singal from arg[2] into the netwotk
+        # prints the muscle cell's repetoire
         if MC is not None and len(NC_list) > 0:
             network = NerveNetwork(MC, NC_list)
             print(network)
