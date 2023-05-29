@@ -311,14 +311,36 @@ def create_genome(DNA_seqs, r_freams):
         genome.append((dna, rf_list[i]))
     return genome
 
+def check_file_path(path):
+    assert open(path, 'w'), "File illegal"
+
+def check_threshold(num):
+    try:
+        float(num)
+    except:
+        raise TypeError("File illegal")
+    if float(num) < 0:
+        raise TypeError("File illegal")
+
 # creats new stem cell, and returns a differentiated muscle cell
 def MC_factory(genome, parameters):
     stem_cell = StemCell(genome)
+    list_of_parameters = parameters.split(",")
+    file_path = list_of_parameters[0] 
+    threshhold= list_of_parameters[1]
+    check_file_path(file_path)
+    check_threshold(threshhold)
     mc = stem_cell.differentiate("Muscle Cell", parameters)
     return mc
 
 # creats new stem cell, mitosis the cell into 2 stem cells, and returns a list of the 2 differentiated nerve cell
 def NC_factory(genome, parameter):
+    try:
+        float(parameter)
+    except:
+        raise TypeError("File illegal")
+    if float(parameter) < 0:
+        raise TypeError("File illegal")
     stem_cell = StemCell(genome)
     stem_cells = stem_cell.mitosis()
     nc_list = []
@@ -365,38 +387,50 @@ def main(file_path, signals):
         MC = None
         #seperate each line
         for line in file:
-            #first line is headlines, skip it
-            if (flag_first):
-                flag_first = False
-                continue
-            # seperate line and get cell type, genome and parameters acoordinly
-            seperated_line = line.split('\t')
-            c_type = cell_type(seperated_line[0])
-            genome = create_genome(seperated_line[1], seperated_line[2])
-            clean_parameters = str(seperated_line[3]).rstrip("\n")
-            #using NC / MC fatory to get the suitble cell according to cell type and ex's instructions
-            if c_type == 'NC':
-                nc = NC_factory(genome, clean_parameters)
-                NC_list += nc
-            else:
-                MC = MC_factory(genome, clean_parameters)
+            #functions raise type error if one of the parameters is not valid
+            try:
+                #first line is headlines, skip it
+                if (flag_first):
+                    flag_first = False
+                    continue
+                # seperate line and get cell type, genome and parameters acoordinly
+                seperated_line = line.split('\t')
+                c_type = cell_type(seperated_line[0])
+                genome = create_genome(seperated_line[1], seperated_line[2])
+                clean_parameters = str(seperated_line[3]).rstrip("\n")
+                #using NC / MC fatory to get the suitble cell according to cell type and ex's instructions
+                if c_type == 'NC':
+                    nc = NC_factory(genome, clean_parameters)
+                    NC_list += nc
+                else:
+                    MC = MC_factory(genome, clean_parameters)
+            except:
+                print("File illegal")
+                return
         # check if got at least one muscle cell and at least one nerve cell
-        # if so builds a cell network and pass each singal from arg[2] into the netwotk
+        # if so:
+        # builds a cell network and pass each singal from arg[2] into the netwotk
         # prints the muscle cell's repetoire
         if MC is not None and len(NC_list) > 0:
             network = NerveNetwork(MC, NC_list)
             print(network)
             seperated_signals = signals.split(',')
             for s in seperated_signals:
+                try:
+                  float(s)
+                except:
+                    print("signal is not a positive number")
+                    return
+                if float(s) < 0:
+                    print("signal is not a positive number")
+                    return
                 network.send_signal(s)
             rep = MC.repertoire()
             print_repretoire(rep)
 
         else: 
-            print("File illegal")
+            print("File path is illegal")
 
-
-main("input.txt","50,200,300")
 
 if __name__ == "__main__":
     main(sys.argv[1], sys.argv[2])
