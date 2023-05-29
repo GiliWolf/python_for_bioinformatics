@@ -380,6 +380,22 @@ def print_repretoire(rep):
             else: 
                 print("Non-coding RNA")
 
+def check_headlines(line):
+    seperated_line = line.split('\t')
+    if len(seperated_line) != 4:
+        raise TypeError("File illegal")
+    type_str = seperated_line[0]
+    up_type_str = type_str.upper()
+    dna_str = seperated_line[1]
+    up_dna_str = dna_str.upper()
+    rf_str = seperated_line[2]
+    up_rf_str = rf_str.upper()
+    parameter_str =  str(seperated_line[3]).rstrip("\n")
+    up_parameter_str = parameter_str.upper()
+    if up_type_str != "TYPE" or up_dna_str != "DNA" or up_rf_str != "READING_FRAMES" or up_parameter_str != "PARAMETER":
+        raise TypeError("File illegal")
+    
+
 def main(file_path, signals):
     with open(file_path) as file:
         flag_first = True
@@ -392,6 +408,7 @@ def main(file_path, signals):
                 #first line is headlines, skip it
                 if (flag_first):
                     flag_first = False
+                    check_headlines(line)
                     continue
                 # seperate line and get cell type, genome and parameters acoordinly
                 seperated_line = line.split('\t')
@@ -417,11 +434,11 @@ def main(file_path, signals):
             seperated_signals = signals.split(',')
             for s in seperated_signals:
                 try:
-                  float(s)
+                  int(s)
                 except:
                     print("signal is not a positive number")
                     return
-                if float(s) < 0:
+                if int(s) < 0 or float(s) != int(s):
                     print("signal is not a positive number")
                     return
                 network.send_signal(s)
@@ -431,6 +448,6 @@ def main(file_path, signals):
         else: 
             print("File path is illegal")
 
-
+# main("input.txt", "50,200,300")
 if __name__ == "__main__":
     main(sys.argv[1], sys.argv[2])
