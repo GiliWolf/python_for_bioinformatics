@@ -314,6 +314,7 @@ def create_genome(DNA_seqs, r_freams):
 def check_file_path(path):
     assert open(path, 'w'), "File illegal"
 
+#check threshold is a positive float
 def check_threshold(num):
     try:
         float(num)
@@ -326,9 +327,11 @@ def check_threshold(num):
 def MC_factory(genome, parameters):
     stem_cell = StemCell(genome)
     list_of_parameters = parameters.split(",")
+    if (len(list_of_parameters) != 2):
+        raise TypeError("File illegal")
     file_path = list_of_parameters[0] 
     threshhold= list_of_parameters[1]
-    check_file_path(file_path)
+    # check_file_path(file_path)
     check_threshold(threshhold)
     mc = stem_cell.differentiate("Muscle Cell", parameters)
     return mc
@@ -380,6 +383,7 @@ def print_repretoire(rep):
             else: 
                 print("Non-coding RNA")
 
+#check headlines contain four parameters in the folowing order - type, dna, reading frame, parameter
 def check_headlines(line):
     seperated_line = line.split('\t')
     if len(seperated_line) != 4:
