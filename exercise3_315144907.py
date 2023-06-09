@@ -1,5 +1,4 @@
 # Gili Wolf 315144907
-import sys
 import pandas as pd
 
 class myData:
@@ -10,7 +9,7 @@ class myData:
         self.users_data = pd.read_csv(path3, sep=";", on_bad_lines='skip', encoding='latin-1')
         # self.clean_age()
 
-    # cleans all the rows containong non-numeric values of 'age' column
+    # cleans all the rows containing non-numeric values of 'age' column
     def clean_age(self):
         print(len(self.users_data['Age']))
         self.users_data['Age'] = self.users_data['Age'].astype('str')
@@ -64,15 +63,15 @@ class myData:
 
     # calculates and return a tuple of the mean and std of the ages of users_data
     def mean_std(self, country):
-        #perperation- split the location into a list and get the last value as the user's country
-        # add country column to the users data
+        # perperation- * split the location into a list and get the last value as the user's country
+        #              * add country column to the users data
         seperate_list_column = self.users_data['Location'].str.split(',')
         country_column = seperate_list_column.str[-1]
         country_column_cleaned = country_column.str.strip()
-        #add country columns to the data frame
+        # add country columns to the data frame
         self.users_data['Country'] = country_column_cleaned
 
-        #group by name of the countries, and extract mean and std from the group of the given country
+        # group by name of the countries, and extract mean and std from the group of the given country
         gb = self.users_data.groupby('Country')
         try:
             users_of_country = gb.get_group(str(country))
@@ -89,7 +88,7 @@ class myData:
         filter_by_name = self.books_data[self.books_data['Book-Title'] == str(book_name)]
         return filter_by_name['ISBN']
     
-    #return the mean of all of the ratings from all of the book's ISBNs
+    # returns the mean of all of the ratings from all of the book's ISBNs
     def mean_rating(self, book_name):
         ISBNs =self.book_name_to_isbn(book_name)
         if ISBNs.size == 0:
@@ -98,7 +97,7 @@ class myData:
         rating_sum = 0
         num_of_ratings = 0
         for isbn in ISBNs:
-            #add to total sum all of the book's rating from the current ISBN and add the count of the ratings to the total number of ratings
+            # add to total sum all of the book's rating from the current ISBN and add the count of the ratings to the total number of ratings
             filter_by_ISBN = self.ratings_data[self.ratings_data['ISBN'] == str(isbn)]
             rating_for_isbn = filter_by_ISBN["Book-Rating"]
             rating_sum += rating_for_isbn.sum(numeric_only= True)
@@ -108,12 +107,49 @@ class myData:
             return
         return rating_sum / num_of_ratings
 
+    # returns a new data frame of the top k's books ratings containg the columns - 'book-title', 'book-author' and 'book-rating
+    # books with shared ratings are sorted according to the lexicographic order of their author name 
+    def top_k(self, k):
+        self.check_k(k)
+        # sort rating according to ISBNs in the rating_data
+        books_ratings = self.ratings_data.groupby('ISBN', as_index=False)['Book-Rating'].mean(numeric_only = True)
+        # sort descending and merge with books_data
+        dec_sorted_rating = books_ratings.sort_values( by = ['Book-Rating'], ascending=False)
+        merged_with_books_data = self.books_data[['ISBN', 'Book-Title', 'Book-Author']].merge(dec_sorted_rating, on = 'ISBN', sort = True)
+        lexi_sort = merged_with_books_data.sort_values(by=['Book-Rating', 'Book-Author'], ascending=[False, True])
+        # if k is bigger than the data, return all the data
+        if (k > dec_sorted_rating.size):
+            k = dec_sorted_rating.size
+        # get first k rows and drop the isbn column
+        first_k = lexi_sort.head(k)
+        cleaned_from_isbn = first_k.drop('ISBN', axis = 1)
+        print(cleaned_from_isbn)
+
+    # check k is a positive integer
+    def check_k(self, k):
+        # check k is a positive integer
+        try: 
+            int(k)
+        except:
+            raise TypeError("k is not numeric")
+        if int(k) != k or k < 1:
+            raise TypeError("k is not a positive int")
+
+    # returns the number of ratings if the Kth user from a descending order of ratings count of all the user
+    # k=1 --> ratings count of the most active user
+    def most_active(self, k):
+        self.check_k(k)
+        # count for each user its number of ratings
+        ratings_count = self.ratings_data['User-ID'].value_counts().reset_index()
+        ratings_count.columns = ['user-ID', 'ratings_count']
+        # sort descending and return the kth user' rating_count
+        ratings_count = ratings_count.sort_values(by='ratings_count', ascending=False)
+        if ratings_count.size < k:
+            k = ratings_count.size
+        kth_user_count = ratings_count.loc[k - 1, 'ratings_count']
+        return kth_user_count
 
 
+# md = myData("books.csv","ratings.csv","users.csv")
+# print(md.most_active(3))
 
-md = myData("books.csv","ratings.csv","users.csv")
-print(md.mean_rating("The Kitchen God's Wife"))
-# print(md.users_data)
-# print(md.mean_std("usa"))
-# print(md.users_data)
-# df = md.books_data
