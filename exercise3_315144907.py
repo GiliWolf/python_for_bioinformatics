@@ -64,7 +64,8 @@ class myData:
 
     # calculates and return a tuple of the mean and std of the ages of users_data
     def mean_std(self, country):
-        #perperation- split the location into a list, as the last value is the country
+        #perperation- split the location into a list and get the last value as the user's country
+        # add country column to the users data
         seperate_list_column = self.users_data['Location'].str.split(',')
         country_column = seperate_list_column.str[-1]
         country_column_cleaned = country_column.str.strip()
@@ -82,11 +83,37 @@ class myData:
         age_mean = age_series.mean(numeric_only = True)
         age_std = age_series.std(numeric_only = True)
         return (round(age_mean,3), round(age_std,3))
+    
+    #returns a series of the book's ISBNs according to the books data
+    def book_name_to_isbn(self, book_name):
+        filter_by_name = self.books_data[self.books_data['Book-Title'] == str(book_name)]
+        return filter_by_name['ISBN']
+    
+    #return the mean of all of the ratings from all of the book's ISBNs
+    def mean_rating(self, book_name):
+        ISBNs =self.book_name_to_isbn(book_name)
+        if ISBNs.size == 0:
+            print("no ISNBs were found to this book's name")
+            return
+        rating_sum = 0
+        num_of_ratings = 0
+        for isbn in ISBNs:
+            #add to total sum all of the book's rating from the current ISBN and add the count of the ratings to the total number of ratings
+            filter_by_ISBN = self.ratings_data[self.ratings_data['ISBN'] == str(isbn)]
+            rating_for_isbn = filter_by_ISBN["Book-Rating"]
+            rating_sum += rating_for_isbn.sum(numeric_only= True)
+            num_of_ratings += rating_for_isbn.count()
+        if num_of_ratings == 0:
+            print("no ratings were found")
+            return
+        return rating_sum / num_of_ratings
+
 
 
 
 md = myData("books.csv","ratings.csv","users.csv")
+print(md.mean_rating("The Kitchen God's Wife"))
 # print(md.users_data)
-print(md.mean_std("usa"))
+# print(md.mean_std("usa"))
 # print(md.users_data)
 # df = md.books_data
