@@ -116,7 +116,7 @@ class myData:
         # sort descending and merge with books_data
         dec_sorted_rating = books_ratings.sort_values( by = ['Book-Rating'], ascending=False)
         merged_with_books_data = self.books_data[['ISBN', 'Book-Title', 'Book-Author']].merge(dec_sorted_rating, on = 'ISBN', sort = True)
-        lexi_sort = merged_with_books_data.sort_values(by=['Book-Rating', 'Book-Author'], ascending=[False, True])
+        lexi_sort = merged_with_books_data.sort_values(by=['Book-Rating', 'Book-Author', 'Book-Title'], ascending=[False, True, True])
         # if k is bigger than the data, return all the data
         if (k > dec_sorted_rating.size):
             k = dec_sorted_rating.size
@@ -151,5 +151,5 @@ class myData:
 
 
 # md = myData("books.csv","ratings.csv","users.csv")
-# print(md.most_active(3))
+# print(md.top_k(10))
 
