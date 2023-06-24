@@ -150,6 +150,6 @@ class myData:
         return kth_user_count
 
 
-# md = myData("books.csv","ratings.csv","users.csv")
-# print(md.top_k(10))
+md = myData("books.csv","ratings.csv","users.csv")
+print(md.num_year(2000,2012))
 

@@ -1,0 +1,9 @@
+chimp_1000_proteins.fasta
+human_20000_proteins.fasta
+mouse_20000_proteins.fasta
+sacCer_10000lines.fastq
+[LIVMFYC]-{A}-[HY]-x-D-[LIVMFY]-[RSTAC]-{D}-{PF}-N-[LIVMFYC](3); kinase
+C-x(2,4)-C-x(3)-[LIVMFYWC]-x(8)-H-x(3,5)-H; Zinc-finger
+K-x(2)-[LIVM]-x-[DESAK]-x(3)-[LIVM]-[PAQ]-x(3)-Q-x-[LIVM]-[LIVMC]-[LIVMFY]-x-G-x(4)-[DE]; Ubiq
+[AG]-x(4)-G-K-[ST]; ATP binding site
+[EQ]-{LNYH}-x-[ATV]-[FY]-{LDAM}-{T}-W-{PG}-N; Actin binding site
