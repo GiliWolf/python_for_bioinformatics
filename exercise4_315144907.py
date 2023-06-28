@@ -1,22 +1,21 @@
 # Gili Wolf 315144907
 import matplotlib.pyplot as plt
 import re
-from Bio.Seq import Seq
 from Bio import SeqIO
 import numpy as np
 import subprocess
-import time
 import sys
 
 # builds a figure using 2 graphs and saves it
+# graph 1 - length graph for 2nd and 3rd fasta paths
+# graph 2 - precentage graph for 1st fasta path
 def first_part_figure(fasta_paths, prosites):
     plt.subplot(1,2,1)
-    plt.scatter = length_graph_builder(fasta_paths[0],fasta_paths[1], prosites)
+    plt.scatter = length_graph_builder(fasta_paths[1],fasta_paths[2], prosites)
     plt.subplot(1,2,2)
     plt.bar = percentage_graph_builder(fasta_paths[0], prosites)
     plt.suptitle('part 1 output')
     plt.tight_layout()
-    # plt.show()
     plt.savefig("315144907.png")
 
 # gets seqs records from the path, and for each prosite patterns gets lengths of all the motifs found in the fasta file
@@ -35,16 +34,17 @@ def motifs_lengths(FASTA_path_1, prosite_patterns):
 # x - length og motifs
 # y - logaritmic number of accurences 
 def length_graph_builder(FASTA_path_1, FASTA_path_2, prosite_patterns):
+    # get motifs lengths and name of both fasta paths
     fasta_1_length_dict, name_fasta_1 = motifs_lengths(FASTA_path_1, prosite_patterns)
     fasta_2_length_dict, name_fasta_2 = motifs_lengths(FASTA_path_2, prosite_patterns)
-    # print(fasta_1_length_dict, " from ", name_fasta_1)
-    # print(fasta_2_length_dict, " from ", name_fasta_2)
     lengths_fasta_1 = np.array([length for length in fasta_1_length_dict.keys()])
+    # get list of motifs lengths and change them to logaritmic values
     occ_1 = [count for count in fasta_1_length_dict.values()]
     occurrences_fasta_1 = np.array(np.log10(occ_1))
     lengths_fasta_2 = np.array([length for length in fasta_2_length_dict.keys()])
     occ_2 = [count for count in fasta_2_length_dict.values()]
     occurrences_fasta_2 = np.array(np.log10(occ_2))
+    # build 2 scatter graphs
     plt.scatter(lengths_fasta_1, occurrences_fasta_1, color = 'r')
     plt.scatter(lengths_fasta_2, occurrences_fasta_2, color = 'b')
     plt.legend([str(name_fasta_1), str(name_fasta_2)], loc = 'upper left')
@@ -52,8 +52,6 @@ def length_graph_builder(FASTA_path_1, FASTA_path_2, prosite_patterns):
     plt.ylabel("logaritmic length accurences")
     plt.title(' Motifs lengthes accurences')
     return plt
-
-
 
     
 #returns a dictonary with the length as key and number of its accurences 
@@ -137,13 +135,7 @@ def count_motifs(regex, records):
     return temp_count
     
 
-# def get_records_from_fasta(FASTA_path):
-#     with open(FASTA_path) as FASTA_file:
-#         records = SeqIO.parse(FASTA_file, "fasta")
-#         return records
-    
-
-# parse the text file and returns a tuple: (list of fasta path files, fastq path, tuple list of prosite patten and name)
+# parse the text file and returns:list of fasta path files, fastq path, tuple list of prosite pattern and its name
 def parse_text_file(file_path):
     fasta_paths = []
     prosites = []
@@ -191,7 +183,8 @@ def get_reads(pattern, fastp_output):
     else:
         print("did not find the pattern:", pattern)
         return
-# return diffence between before filtered reaads and after filtered reads  
+    
+# returns diffence between before filtered reaads and after filtered reads  
 def cal_reads_diff(fastp_output):
     filtered_output = str(fastp_output).replace('\n', "")
     before_pattern = r"before filtering:total reads: (\d+)"
@@ -218,15 +211,16 @@ def run_fastq_on_fastp(fastp_path, fastq_path):
     except FileNotFoundError:
         print("fastp path is illegal")
 
-
-def main(fastp_path, txt_file_path):
-    fasta_paths, fastq_path, prosites = parse_text_file(txt_file_path)
+# parse input file , activate first part function, runs fastp on the fastaq file and print the reads differnce
+def main(fastp_path, input_file_path):
+    fasta_paths, fastq_path, prosites = parse_text_file(input_file_path)
     first_part_figure(fasta_paths, prosites)
     output = run_fastq_on_fastp(fastp_path, fastq_path)
     print(cal_reads_diff(output))
 
 if __name__ == "__main__":
     try:
+        # argv 1 - fastp path, argv 2- input file path
         main(sys.argv[1], sys.argv[2])
     except:
         print("invalid number of arguments")
