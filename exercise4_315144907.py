@@ -4,39 +4,52 @@ import re
 from Bio.Seq import Seq
 from Bio import SeqIO
 import numpy as np
+import subprocess
+import time
+import sys
 
-def first_part_figure(plt1,plt2):
+# builds a figure using 2 graphs and saves it
+def first_part_figure(fasta_paths, prosites):
     plt.subplot(1,2,1)
-    plt.plot = plt1
+    plt.scatter = length_graph_builder(fasta_paths[0],fasta_paths[1], prosites)
     plt.subplot(1,2,2)
-    plt.plot = plt2
-    plt.title('part 1 output', loc='center')
-    plt.show()
+    plt.bar = percentage_graph_builder(fasta_paths[0], prosites)
+    plt.suptitle('part 1 output')
+    plt.tight_layout()
+    # plt.show()
+    plt.savefig("315144907.png")
 
-def motifs_lengths_scatter_plot(FASTA_path_1, FASTA_path_2, prosite_patterns):
+# gets seqs records from the path, and for each prosite patterns gets lengths of all the motifs found in the fasta file
+# returns a dictonary with length of motif as a key and number of it accurences as a value
+def motifs_lengths(FASTA_path_1, prosite_patterns):
     fasta_1_records = list(SeqIO.parse(FASTA_path_1, "fasta"))
-    fasta_2_records = list(SeqIO.parse(FASTA_path_2, "fasta"))
     name_fasta_1 = str(FASTA_path_1).rstrip(".fasta")
-    name_fasta_2 = str(FASTA_path_2).rstrip(".fasta")
     regex_patterns_list = prosite_patterns_into_regex(prosite_patterns)
     fasta_1_motifs_lengths = []
-    fasta_2_motifs_lengths= []
     for regex in regex_patterns_list:
         fasta_1_motifs_lengths += count_motifs_lengths(regex[0],fasta_1_records)
-        fasta_2_motifs_lengths += count_motifs_lengths(regex[0],fasta_2_records)
     fasta_1_length_dict = same_length_count(fasta_1_motifs_lengths)
-    fasta_2_length_dict = same_length_count(fasta_2_motifs_lengths)
-    graph = length_graph_builder(fasta_1_length_dict,fasta_2_length_dict, name_fasta_1, name_fasta_2)
-    return graph
+    return fasta_1_length_dict, name_fasta_1
 
-def length_graph_builder(fasta_1_length_dict,fasta_2_length_dict, name_fasta_1, name_fasta_2):
+# builds a scatter graphs of number of lengths accurences for 2 fasta files, returns a plot:
+# x - length og motifs
+# y - logaritmic number of accurences 
+def length_graph_builder(FASTA_path_1, FASTA_path_2, prosite_patterns):
+    fasta_1_length_dict, name_fasta_1 = motifs_lengths(FASTA_path_1, prosite_patterns)
+    fasta_2_length_dict, name_fasta_2 = motifs_lengths(FASTA_path_2, prosite_patterns)
+    # print(fasta_1_length_dict, " from ", name_fasta_1)
+    # print(fasta_2_length_dict, " from ", name_fasta_2)
     lengths_fasta_1 = np.array([length for length in fasta_1_length_dict.keys()])
-    occurrences_fasta_1 = np.array([count for count in fasta_1_length_dict.values()])
+    occ_1 = [count for count in fasta_1_length_dict.values()]
+    occurrences_fasta_1 = np.array(np.log10(occ_1))
     lengths_fasta_2 = np.array([length for length in fasta_2_length_dict.keys()])
-    occurrences_fasta_2 = np.array([count for count in fasta_2_length_dict.values()])
+    occ_2 = [count for count in fasta_2_length_dict.values()]
+    occurrences_fasta_2 = np.array(np.log10(occ_2))
     plt.scatter(lengths_fasta_1, occurrences_fasta_1, color = 'r')
     plt.scatter(lengths_fasta_2, occurrences_fasta_2, color = 'b')
-    plt.legend(['fasta1', 'fasta2'], loc = 'upper left')
+    plt.legend([str(name_fasta_1), str(name_fasta_2)], loc = 'upper left')
+    plt.xlabel("length of motif")
+    plt.ylabel("logaritmic length accurences")
     plt.title(' Motifs lengthes accurences')
     return plt
 
@@ -53,8 +66,9 @@ def same_length_count(list_of_lengths):
             length_counts[length] = 1
     return length_counts
 
-
-def relative_percentage_graph(FASTA_path, prosite_patterns):
+# gets seqs records from the path, and for each prosite patterns gets count of all the motifs found in the fasta file
+# returns a tuple list of (number of accurences, pattern name)
+def cal_motifs_propotions(FASTA_path, prosite_patterns):
     fasta_records = list(SeqIO.parse(FASTA_path, "fasta"))
     regex_patterns_list = prosite_patterns_into_regex(prosite_patterns)
     motifs_count_list = []
@@ -65,22 +79,28 @@ def relative_percentage_graph(FASTA_path, prosite_patterns):
         motifs_count_list.append((temp_re_count, regex[1]))
         motifs_total_count += temp_re_count
     # calculate propotions and build a graph out od data
+    # print(motifs_count_list, " of ", FASTA_path, " total count: ", motifs_total_count)
     motifs_proportion_list = cal_motifs_proportion(motifs_count_list, motifs_total_count)
-    graph = percentage_graph_builder(motifs_proportion_list)
-    return graph
+    return motifs_proportion_list
+   
 
 #builds a pie chart out of tuple list of propotions and name of patterns
-def percentage_graph_builder(motifs_proportion_list):
+def percentage_graph_builder(FASTA_path, prosite_pattern):
+    motifs_proportion_list = cal_motifs_propotions(FASTA_path, prosite_pattern)
     # seperate propotions and patterns name
     propotions = list(map(lambda x: x[0], motifs_proportion_list))
     prosite_names = list(map(lambda x: x[1], motifs_proportion_list))
     #change to precentage and build pie chart accordinly 
     precentages = [prop * 100 for prop in propotions]
     data = np.array(precentages)
-    plt.pie(data, autopct='%1.1f%%', radius= 0.7)
-    plt.legend(prosite_names, loc = 'upper right', fontsize = 'x-small')
-    plt.title('patterns motifs percantages')
-    plt.show()
+    x = [1,2,3,4,5]
+    plt.bar(prosite_names, data)
+    # plt.legend(prosite_names, loc = 'lower left', fontsize = 'xx-small')
+    plt.xticks(fontsize = 8, rotation = 45)
+    fasta_name = str(FASTA_path).rstrip('.fasta')
+    title = 'patterns motifs percantages\n from '+ fasta_name
+    plt.title(title)
+    # plt.show()
     return plt
 
 
@@ -142,34 +162,73 @@ def parse_text_file(file_path):
             # added to prosites list as tuples
             temp_prosite = str(line).strip().split(";")
             prosites.append((temp_prosite[0], temp_prosite[1]))
-    return (fasta_paths, fastq_path, prosites)
+    return fasta_paths, fastq_path, prosites
 
-#changes prosite patterns' chars into regex like wise chars
+# changes prosite patterns' chars into regex like wise chars
 # return a new tuple list of (pattern's regex, pattern name)
 def prosite_patterns_into_regex(prosite_patterns_list):
     regex_list = []
     for prosite in prosite_patterns_list:
         pattern = str(prosite[0])
-        # if "X" in pattern:
         pattern = pattern.replace("-", "")
         pattern = pattern.replace("X", ".")
         pattern = pattern.replace("x", ".")
         pattern = pattern.replace("{","[^").replace("}", "]")
         pattern = pattern.replace("(","{").replace(")", "}")
-        # pattern = pattern.replace("{", "#")
-        # pattern = pattern.replace("}", "%")
-        # pattern = pattern.replace("(", "{")
         pattern = pattern.replace("<", r"\A")
         pattern = pattern.replace(">", r"\Z")
         raw_string = r"{}".format(pattern)
         regex_list.append((raw_string, prosite[1]))
     return regex_list
 
+# get number of reads by searching a given pattern in the fastp output
+def get_reads(pattern, fastp_output):
+    filtered_output = str(fastp_output).replace('\n', "")
+    match = re.search(pattern, filtered_output)
+    if match:
+        reads = int(match.group(1))
+        return reads
+    else:
+        print("did not find the pattern:", pattern)
+        return
+# return diffence between before filtered reaads and after filtered reads  
+def cal_reads_diff(fastp_output):
+    filtered_output = str(fastp_output).replace('\n', "")
+    before_pattern = r"before filtering:total reads: (\d+)"
+    after_pattern = r"after filtering:total reads: (\d+)"
+    before_reads = get_reads(before_pattern, fastp_output)
+    after_reads = get_reads(after_pattern, fastp_output)
+    return before_reads - after_reads
+    
+
+# run fastq file on fastq programm from a given path for a limited 5 seconds
+# returns the procees output
+def run_fastq_on_fastp(fastp_path, fastq_path):
+    try:
+        # fastp_str = fastp_path.
+        run_commands = fastp_path + " --in1 "+ '"' + fastq_path + '"' +" --out1 /dev/null -j /dev/null -h /dev/null"
+        # Start the process and tun for 5 seconds
+        process = subprocess.run(run_commands,capture_output=True, text=True, shell=True, timeout=5)
+        
+        if process.returncode != 0:
+            # process crashed
+            raise subprocess.CalledProcessError("fastp crashed")
+        return process.stderr
+
+    except FileNotFoundError:
+        print("fastp path is illegal")
 
 
-datata = parse_text_file("text.txt")
-# regex_list = prosite_patterns_into_regex(datata[2])
-g1 = motifs_lengths_scatter_plot(datata[0][0],datata[0][1], datata[2])
-g2 = relative_percentage_graph(datata[0][0], datata[2])
-first_part_figure(g1, g2)
-# print ("ki")
+def main(fastp_path, txt_file_path):
+    fasta_paths, fastq_path, prosites = parse_text_file(txt_file_path)
+    first_part_figure(fasta_paths, prosites)
+    output = run_fastq_on_fastp(fastp_path, fastq_path)
+    print(cal_reads_diff(output))
+
+if __name__ == "__main__":
+    try:
+        main(sys.argv[1], sys.argv[2])
+    except:
+        print("invalid number of arguments")
+
+
